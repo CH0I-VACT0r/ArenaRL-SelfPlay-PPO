@@ -29,17 +29,7 @@ Evaluate the initial self-play environment and identify reward-shaping issues.
 
 At every FixedUpdate step, each agent observes a **30-dimensional state vector** before selecting an action.
 
-\[
-s_t
-=
-\left[
-s_t^{self},
-s_t^{enemy},
-s_t^{hazard}
-\right]
-\in
-\mathbb{R}^{30}
-\]
+s_t = [s_self, s_enemy, s_hazard] ∈ R^30
 
 where the observation consists of the agent's own state, the opponent's state, and nearby environmental hazards.
 
@@ -58,34 +48,21 @@ where the observation consists of the agent's own state, the opponent's state, a
 
 The self-state vector is defined as
 
-\[
-s_t^{self}
-=
-[
-c,
-p_x,
-p_y,
-v_x,
-v_y,
-h,
-r_1,
-r_2,
-r_3,
-r_4,
-b_1,
-b_2,
-b_3
-].
-\]
-
-where
-
-- \(c\) denotes the class identifier.
-- \(p_x,p_y\) represent the normalized local position.
-- \(v_x,v_y\) denote the normalized velocity vector.
-- \(h\) is the normalized health ratio.
-- \(r_i\) indicates whether skill \(i\) is available.
-- \(b_i\) represents active buffs or debuffs.
+s_self = [
+    class_id,
+    pos_x,
+    pos_y,
+    vel_x,
+    vel_y,
+    hp_ratio,
+    skill_ready_1,
+    skill_ready_2,
+    skill_ready_3,
+    skill_ready_4,
+    stun,
+    invincible,
+    cc_immunity
+]
 
 ---
 
@@ -101,28 +78,18 @@ where
 
 The opponent observation is represented as
 
-\[
-s_t^{enemy}
-=
-[
-\Delta x,
-\Delta y,
-v_x^{enemy},
-v_y^{enemy},
-h^{enemy},
-d,
-e_1,
-e_2,
-e_3,
-e_4
-].
-\]
-
-where
-
-- \(\Delta x,\Delta y\) are the normalized relative coordinates.
-- \(d\) denotes the normalized distance to the opponent.
-- \(e_i\) correspond to the opponent's status information.
+s_enemy = [
+    rel_pos_x,
+    rel_pos_y,
+    enemy_vel_x,
+    enemy_vel_y,
+    enemy_hp_ratio,
+    relative_distance,
+    enemy_stun,
+    enemy_invincible,
+    enemy_cc_immunity,
+    enemy_charging
+]
 
 ---
 
@@ -135,22 +102,15 @@ where
 
 The environmental observation is defined as
 
-\[
-s_t^{hazard}
-=
-[
-h_x,
-h_y,
-0,
-0,
-0,
-0,
-0
-].
-\]
-
-where \(h_x\) and \(h_y\) denote the normalized relative position of the closest hazardous object. The remaining dimensions are reserved for future extensions, such as multiple simultaneous hazards.
-
+s_hazard = [
+    nearest_hazard_x,
+    nearest_hazard_y,
+    reserved_1,
+    reserved_2,
+    reserved_3,
+    reserved_4,
+    reserved_5
+]
 
 All observations are normalized before being passed to the neural network. Relative coordinates are used instead of absolute world coordinates to improve translation invariance and facilitate policy generalization across the arena.
 
