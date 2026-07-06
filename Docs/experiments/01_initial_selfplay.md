@@ -25,6 +25,209 @@ Evaluate the initial self-play environment and identify reward-shaping issues.
 
 ---
 
+# Observation Space
+
+At every FixedUpdate step, each agent observes a **30-dimensional state vector** before selecting an action.
+
+\[
+s_t
+=
+\left[
+s_t^{self},
+s_t^{enemy},
+s_t^{hazard}
+\right]
+\in
+\mathbb{R}^{30}
+\]
+
+where the observation consists of the agent's own state, the opponent's state, and nearby environmental hazards.
+
+---
+
+## Self State (13)
+
+| Feature | Description |
+|---------|-------------|
+| Class ID | Warrior (0) / Mage (1) |
+| Position | Local X/Y position (normalized by 5) |
+| Velocity | Normalized movement vector |
+| HP Ratio | Current HP / Max HP |
+| Skill Ready | Cooldown availability of four skills |
+| Status | Stun / Invincible / CC Immunity |
+
+The self-state vector is defined as
+
+\[
+s_t^{self}
+=
+[
+c,
+p_x,
+p_y,
+v_x,
+v_y,
+h,
+r_1,
+r_2,
+r_3,
+r_4,
+b_1,
+b_2,
+b_3
+].
+\]
+
+where
+
+- \(c\) denotes the class identifier.
+- \(p_x,p_y\) represent the normalized local position.
+- \(v_x,v_y\) denote the normalized velocity vector.
+- \(h\) is the normalized health ratio.
+- \(r_i\) indicates whether skill \(i\) is available.
+- \(b_i\) represents active buffs or debuffs.
+
+---
+
+## Enemy State (10)
+
+| Feature | Description |
+|---------|-------------|
+| Relative Position | Relative X/Y position (normalized by 10) |
+| Velocity | Enemy movement direction |
+| HP Ratio | Enemy HP ratio |
+| Relative Distance | Normalized distance |
+| Status | Stun / Invincible / CC Immunity / Charging |
+
+The opponent observation is represented as
+
+\[
+s_t^{enemy}
+=
+[
+\Delta x,
+\Delta y,
+v_x^{enemy},
+v_y^{enemy},
+h^{enemy},
+d,
+e_1,
+e_2,
+e_3,
+e_4
+].
+\]
+
+where
+
+- \(\Delta x,\Delta y\) are the normalized relative coordinates.
+- \(d\) denotes the normalized distance to the opponent.
+- \(e_i\) correspond to the opponent's status information.
+
+---
+
+## Hazard Radar (7)
+
+| Feature | Description |
+|---------|-------------|
+| Closest Hazard | Relative position of the nearest projectile or AoE |
+| Reserved Space | Five-dimensional padding reserved for future extensions |
+
+The environmental observation is defined as
+
+\[
+s_t^{hazard}
+=
+[
+h_x,
+h_y,
+0,
+0,
+0,
+0,
+0
+].
+\]
+
+where \(h_x\) and \(h_y\) denote the normalized relative position of the closest hazardous object. The remaining dimensions are reserved for future extensions, such as multiple simultaneous hazards.
+
+
+All observations are normalized before being passed to the neural network. Relative coordinates are used instead of absolute world coordinates to improve translation invariance and facilitate policy generalization across the arena.
+
+---
+
+## Observation Normalization
+
+All continuous observations are normalized before being fed into the policy network.
+
+Position and distance values are scaled to approximately
+
+\[
+[-1,1]
+\]
+
+to reduce gradient variance and stabilize PPO optimization.
+
+Furthermore, relative coordinates are used instead of absolute world coordinates, introducing translation invariance into the learned policy.
+
+As a result, the agent learns spatial relationships with respect to its opponent rather than memorizing specific arena locations, improving policy generalization across different environments.
+
+## Relative Coordinates
+
+Instead of absolute world coordinates,
+
+\[
+(x,y)
+\]
+
+the agent observes
+
+\[
+(x_{enemy}-x_{self},
+y_{enemy}-y_{self})
+\]
+
+This introduces translation invariance into the policy.
+
+Consequently, the learned behavior becomes independent of arena location.
+
+---
+
+# Action Space
+a_t = (a_t^{move}, a_t^{skill})
+
+a_t^{move}\in\{0,\cdots,8\}
+a_t^{skill}\in\{0,\cdots,4\}
+
+The final action is sampled independently from two categorical distributions produced by the actor network.
+
+---
+
+# Runtime Optimization
+
+### Rendering Optimization
+Disabled VSync
+Reduced Game View resolution
+
+### Memory Optimization
+Instead of allocating and destroying projectile instances every frame,
+
+all temporary gameplay objects are recycled through a custom object pool.
+
+This minimizes garbage collection overhead and stabilizes simulation throughput during long training sessions.
+
+### Telemetry Pipeline
+
+Raw gameplay events are asynchronously logged to CSV during training.
+
+Statistical metrics are generated in a post-processing stage to avoid interfering with PPO optimization.
+
+All expensive metrics (DPS, Hit Rate, Skill Usage, etc.) are computed offline using analyze_telemetry.py.
+
+This keeps the training loop lightweight and minimizes CPU bottlenecks.
+
+---
+
 # Initial Skill Adjustment (Warrior)
 
 After the first training run, the Warrior's basic attack was buffed to improve melee effectiveness.
@@ -37,7 +240,7 @@ After the first training run, the Warrior's basic attack was buffed to improve m
 
 ---
 
-# Training Result #1 (1000 Episodes)
+# Training Result #1 (1400 Episodes)
 
 ## Overall Result
 
@@ -190,6 +393,8 @@ Although the Warrior received significant improvements to attack range, attack a
 
 These findings suggest that **reward design has a much greater influence on learned behavior than raw skill statistics.**
 
+Therefore, subsequent experiments focus on modifying optimization objectives rather than modifying gameplay parameters.
+
 ---
 
 # Next Experiment
@@ -203,3 +408,17 @@ Instead of sharing an identical reward structure:
 - **Mage** will be rewarded for maintaining optimal spacing, surviving longer, and maximizing the effectiveness of high-value ranged abilities.
 
 The objective is to shift optimization from **stat balancing** toward **behavior shaping through reward engineering**, enabling each class to learn strategies better aligned with its intended gameplay role.
+
+---
+
+# Lessons Learned
+
+Experiment 01 provided several insights that influenced the next design iteration.
+
+- Increasing raw skill statistics alone did not significantly improve combat behavior.
+
+- Reward shaping had a much greater impact on learned strategies than parameter tuning.
+
+- Rich telemetry data proved essential for identifying behavioral bottlenecks.
+
+- Class-specific behaviors require class-specific optimization objectives rather than symmetric reward functions.
