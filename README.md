@@ -133,11 +133,8 @@ Development is organized as a series of research experiments.
 | 01 | [Initial Self-Play Training](Docs/experiments/01_initial_selfplay.md) | Complete |
 | 02 | Asymmetric Reward Functions | In Progress |
 
-Detailed reports are available in:
-
-```
-Docs/experiments/
-```
+Detailed change history is available in:
+➡️ [CHANGELOG.md](Docs/changelog/CHANGELOG.md)
 
 ---
 
