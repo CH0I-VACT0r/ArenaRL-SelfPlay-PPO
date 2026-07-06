@@ -128,10 +128,10 @@ Telemetry data is later analyzed to guide reward tuning and game balancing.
 
 Development is organized as a series of research experiments.
 
-| Experiment | Description |
-|------------|-------------|
-| Experiment 01 | Initial Self-Play Training |
-| Experiment 02 | Asymmetric Reward Design *(In Progress)* |
+| No. | Experiment | Status |
+|----:|------------|--------|
+| 01 | [Initial Self-Play Training](Docs/experiments/01_initial_selfplay.md) | Complete |
+| 02 | Asymmetric Reward Functions | In Progress |
 
 Detailed reports are available in:
 
