@@ -37,7 +37,7 @@ After the first training run, the Warrior's basic attack was buffed to improve m
 
 ---
 
-# Training Result #1 (1400 Episodes)
+# Training Result #1 (1000 Episodes)
 
 ## Overall Result
 
