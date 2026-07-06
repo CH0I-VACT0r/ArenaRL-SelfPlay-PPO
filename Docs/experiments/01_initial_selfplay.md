@@ -167,6 +167,7 @@ The final action is sampled independently from two categorical distributions pro
 
 ### Rendering Optimization
 Disabled VSync
+
 Reduced Game View resolution
 
 ### Memory Optimization
@@ -188,19 +189,7 @@ This keeps the training loop lightweight and minimizes CPU bottlenecks.
 
 ---
 
-# Initial Skill Adjustment (Warrior)
-
-After the first training run, the Warrior's basic attack was buffed to improve melee effectiveness.
-
-| Parameter | Before | After |
-|-----------|--------|-------|
-| Attack Radius | 1.5 | 2.0 |
-| Attack Angle | 90° | 120° |
-| Damage | 10 | 20 |
-
----
-
-# Training Result #1 (1400 Episodes)
+# Training Result #1 (1000 Episodes)
 
 ## Overall Result
 
@@ -234,6 +223,18 @@ After the first training run, the Warrior's basic attack was buffed to improve m
 
 - Meteor achieved a **49%** hit rate despite its **1.5-second charge time**.
 - The skill appeared to have the largest impact on match outcomes.
+
+---
+
+# Initial Skill Adjustment (Warrior)
+
+After the first training run, the Warrior's basic attack was buffed to improve melee effectiveness.
+
+| Parameter | Before | After |
+|-----------|--------|-------|
+| Attack Radius | 1.5 | 2.0 |
+| Attack Angle | 90° | 120° |
+| Damage | 10 | 20 |
 
 ---
 
