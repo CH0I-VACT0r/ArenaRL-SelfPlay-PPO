@@ -389,6 +389,7 @@ Future work includes:
 - Evaluating behavioral changes using telemetry statistics and Elo progression.
 
 The long-term objective is to obtain policies that exhibit stable, efficient, and interpretable combat behavior, providing a reliable foundation for subsequent automated balance recommendation experiments.
+
 ---
 
 # Lessons Learned
