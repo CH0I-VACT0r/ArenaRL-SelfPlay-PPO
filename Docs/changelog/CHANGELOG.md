@@ -4,7 +4,7 @@ All notable changes to the project are documented here.
 
 ---
 
-## v0.2.0 — Asymmetric Reward Update *(In Progress)*
+## v0.2.0 — Asymmetric Reward Update
 
 This update focuses on improving combat behavior through reward shaping rather than simply increasing skill statistics.
 
@@ -117,3 +117,82 @@ Compared with Experiment 01, this update aims to:
 - Increase kill pressure.
 - Lower timeout frequency.
 - Produce more distinguishable Warrior and Mage playstyles.
+
+---
+
+## v0.2.1 — Reward Refinement (Planned)
+
+This update refines the asymmetric reward functions introduced in v0.2.0 by addressing inefficient combat behaviors discovered through telemetry analysis.
+
+Rather than introducing additional balance changes, this iteration focuses on improving policy quality before future balance evaluation.
+
+---
+
+### Reward Refinement
+
+#### Warrior — Attack Precision
+
+Experiment 02 revealed that the Warrior frequently spammed Basic Attack despite maintaining a very low hit rate.
+
+To improve combat efficiency, attack precision will be incorporated into the reward function.
+
+Planned changes:
+
+- Successful attacks continue receiving positive rewards.
+- Missed attacks receive a small penalty.
+- Reward is shifted from attack frequency toward attack accuracy.
+
+Expected behavior:
+
+- Reduce unnecessary attack spamming.
+- Encourage deliberate melee engagements.
+- Improve overall hit conversion.
+
+---
+
+#### Mage — Context-Aware Defensive Reward
+
+Telemetry indicated that the Mage rarely utilized Nova Stun effectively because maintaining long-range spacing minimized close-range encounters.
+
+To improve defensive decision making, additional rewards will be granted when defensive skills are successfully used under dangerous conditions.
+
+Example condition:
+
+```
+Distance <= 2.0
+AND
+Charge CC Skill's Stun Hits
+```
+
+Expected behavior:
+
+- Improve close-range survival.
+- Increase defensive skill utilization.
+- Encourage adaptive combat behavior rather than purely maintaining distance.
+
+---
+
+### Reward Sparsity Improvement
+
+Experiment 02 suggested that the current reward function places excessive emphasis on damage output while insufficiently distinguishing between efficient and inefficient actions.
+
+The reward function will therefore place greater weight on **successful decision quality** rather than raw action frequency.
+
+Expected outcome:
+
+- Higher attack precision.
+- Better policy efficiency.
+- Reduced reward exploitation.
+- More representative combat telemetry.
+
+---
+
+## Expected Outcome
+
+Compared with v0.2.0, this update aims to:
+
+- Reduce Warrior attack spamming.
+- Increase Warrior hit accuracy.
+- Improve Mage defensive reactions.
+- Encourage context-aware combat decisions.
+- Produce cleaner telemetry for future balance recommendation experiments.
