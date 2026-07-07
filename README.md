@@ -1,4 +1,4 @@
-# ArenaRL-SelfPlay-PPO
+# ArenaRL-SelfPlay
 
 **Self-Play Reinforcement Learning Arena built with Unity and PyTorch**
 
