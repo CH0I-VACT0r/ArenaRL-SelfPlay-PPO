@@ -113,7 +113,7 @@ During optimization, Optuna evaluated a wide range of gameplay configurations.
 
 Several representative trials are summarized below.
 
-![Tensorboard graph](../graph/exp05_results.png)
+![Tensorboard graph](../graph/ex05_results.png)
 
 | Trial | Result |
 |-------|---------|
