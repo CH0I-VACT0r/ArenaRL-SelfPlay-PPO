@@ -113,6 +113,8 @@ During optimization, Optuna evaluated a wide range of gameplay configurations.
 
 Several representative trials are summarized below.
 
+![Tensorboard graph](../graph/exp05_results.png)
+
 | Trial | Result |
 |-------|---------|
 | High Warrior Damage | Warrior overwhelmingly dominant |
