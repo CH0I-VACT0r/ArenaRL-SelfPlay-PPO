@@ -134,7 +134,7 @@ Development is organized as a series of research experiments.
 | 02 | [Asymmetric Reward Functions](Docs/experiments/02_asymmetric_reward_shaping.md) | Complete |
 | 03 | [Reward Refinement](Docs/experiments/03_reward_refinement.md) | Complete |
 | 04 | [Behavior Refinement](Docs/experiments/04_behavior_refinement.md) | Complete |
-| 05 | [Bbalance Optimization](Docs/experiments/05_balance_optimization.md) | Complete |
+| 05 | [Balance Optimization](Docs/experiments/05_balance_optimization.md) | Complete |
 
 ---
 
