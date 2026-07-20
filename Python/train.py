@@ -4,25 +4,34 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.distributions import Categorical
 import numpy as np
+from mlagents_envs.side_channel.engine_configuration_channel import EngineConfigurationChannel
+from mlagents_envs.side_channel.side_channel import SideChannel, IncomingMessage
 from mlagents_envs.environment import UnityEnvironment
 from mlagents_envs.base_env import ActionTuple
 from torch.utils.tensorboard import SummaryWriter
 import time
 import os
-
+import uuid
 from model import ArenaPPOModel
 from replay_buffer import ReplayBuffer
 
 MAX_EPISODES = 50000
 MAX_STEPS_PER_EPISODE = 3000
-BUFFER_SIZE = 10240
-BATCH_SIZE = 1024
-LEARNING_RATE = 3e-4
+BUFFER_SIZE = 8192
+BATCH_SIZE = 512
+LEARNING_RATE = 1e-4
 GAMMA = 0.99
 CLIP_EPSILON = 0.2
 K_EPOCHS = 3
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# 텔레메트리 경고 무시용 채널
+class DummyTelemetryChannel(SideChannel):
+    def __init__(self) -> None:
+        super().__init__(uuid.UUID("11111111-2222-3333-4444-555555555555"))
+    def on_message_received(self, msg: IncomingMessage) -> None:
+        pass # 유니티가 보낸 데이터를 그냥 폐기하여 경고 로그를 차단함
 
 # ELO 연산 함수 ---------------
 def calculate_expected_score(rating_a, rating_b):
@@ -96,6 +105,9 @@ def update_model(model, optimizer, replay_buffer, k_epochs, clip_epsilon):
         
         optimizer.zero_grad()
         loss.backward()
+
+        # 오버슈팅 방지를 위한 클리핑
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
         optimizer.step()
         
         total_actor_loss += actor_loss.item()
@@ -108,14 +120,14 @@ def run_train():
     writer = SummaryWriter("runs/Arena_SelfPlay")
     print(f"\n[시스템 초기화] 현재 학습에 할당된 연산 장치: {device}")
     
-    model = ArenaPPOModel(input_dim=30, hidden_dim=256, move_actions=9, skill_actions=5).to(device)
+    model = ArenaPPOModel(input_dim=31, hidden_dim=256, move_actions=9, skill_actions=5).to(device)
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
     replay_buffer = ReplayBuffer(buffer_size=BUFFER_SIZE, batch_size=BATCH_SIZE)
 
     # ==========================================
     # 체크포인트 이어서 학습하기
     # ==========================================
-    CHECKPOINT_PATH = "./ArenaPPO_Ep000.pt" # 경로 추가
+    CHECKPOINT_PATH = "./ArenaPPO_Ep000.pt" 
 
     if os.path.exists(CHECKPOINT_PATH):
         print(f"[체크포인트 로드] {CHECKPOINT_PATH} 파일에서 이전 학습 가중치를 성공적으로 불러옴.")
@@ -128,8 +140,18 @@ def run_train():
     print("파이썬 학습 서버 OPEN")
     print("유니티 에디터로 이동하여 [Play(▶)] 버튼")
     print("="*60 + "\n")
+
+    engine_channel = EngineConfigurationChannel()
+    engine_channel.set_configuration_parameters(time_scale=10.0) # 10배속 훈련
+    dummy_telemetry = DummyTelemetryChannel()
+
+    env = UnityEnvironment(
+        file_name=None, 
+        seed=42, 
+        timeout_wait=120, 
+        side_channels=[engine_channel, dummy_telemetry] # 채널 주입
+    )
     
-    env = UnityEnvironment(file_name=None, seed=42, timeout_wait=120)
     env.reset()
     
     behavior_names = list(env.behavior_specs.keys())
