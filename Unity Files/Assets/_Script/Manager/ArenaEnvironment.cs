@@ -1,9 +1,11 @@
 using UnityEngine;
 using Unity.MLAgents;
+using Unity.MLAgents.SideChannels;
 
 public class ArenaEnvironment : MonoBehaviour
 {
     public static ArenaEnvironment Instance { get; private set; }
+    TelemetrySideChannel telemetryChannel;
 
     [Header("Agents")]
     public ArenaAgent warriorAgent;
@@ -32,6 +34,18 @@ public class ArenaEnvironment : MonoBehaviour
         else
         {
             Destroy(gameObject);
+        }
+
+        telemetryChannel = new TelemetrySideChannel();
+        SideChannelManager.RegisterSideChannel(telemetryChannel);
+    }
+
+    void OnDestroy()
+    {
+        // 메모리 누수를 막기 위해 종료 시 채널 등록 해제
+        if (telemetryChannel != null)
+        {
+            SideChannelManager.UnregisterSideChannel(telemetryChannel);
         }
     }
 
@@ -78,28 +92,75 @@ public class ArenaEnvironment : MonoBehaviour
 
     private void UpdateBalanceParameters()
     {
-        // 파이썬에서 전달한 수치 읽기 (값이 없으면 뒤의 기본값 200, 1.0 적용)
-        float rawWarriorHp = Academy.Instance.EnvironmentParameters.GetWithDefault("warrior_hp", 200f);
-        float rawMageHp = Academy.Instance.EnvironmentParameters.GetWithDefault("mage_hp", 200f);
-        float rawWarriorDmg = Academy.Instance.EnvironmentParameters.GetWithDefault("warrior_dmg_mult", 1.0f);
-        float rawMageDmg = Academy.Instance.EnvironmentParameters.GetWithDefault("mage_dmg_mult", 1.0f);
+        // 플레이 테스트
+        // ======================================
+        // EP08 Trial 26 최적화 파라미터 고정 (8차원)
+        warriorMaxHp = 300f;
+        mageMaxHp = 150f;
+        warriorDamageMultiplier = 1.3f;
+        mageDamageMultiplier = 1.5f;
 
-        // 난수 및 소수점을 5의 배수 단위로 저장
-        warriorMaxHp = RoundToFive(rawWarriorHp);
-        mageMaxHp = RoundToFive(rawMageHp);
+        float warriorSpeedMult = 0.85f;
+        float mageSpeedMult = 1.2f;
+        float warriorCdMult = 1.15f;
+        float mageCdMult = 1.15f;
 
-        // 데미지 배율은 소수점 둘째 자리까지만 유지 (예: 1.05, 1.10)
-        warriorDamageMultiplier = Mathf.Round(rawWarriorDmg * 20f) / 20f;
-        mageDamageMultiplier = Mathf.Round(rawMageDmg * 20f) / 20f;
-
-        // 에이전트 체력 업데이트 (새로운 에피소드가 시작될 때 반영)
         if (warriorAgent != null) warriorAgent.maxHp = warriorMaxHp;
         if (mageAgent != null) mageAgent.maxHp = mageMaxHp;
 
-        Debug.Log($"[ArenaEnvironment] Balance Updated - Warrior HP: {warriorMaxHp} (Dmg: {warriorDamageMultiplier}), Mage HP: {mageMaxHp} (Dmg: {mageDamageMultiplier})");
+        // 이동 속도 및 쿨타임 배율 주입
+        if (warriorAgent != null)
+        {
+            warriorAgent.currentMoveSpeed = warriorAgent.moveSpeed * warriorSpeedMult;
+            warriorAgent.cooldownMultiplier = warriorCdMult;
+        }
+        if (mageAgent != null)
+        {
+            mageAgent.currentMoveSpeed = mageAgent.moveSpeed * mageSpeedMult;
+            mageAgent.cooldownMultiplier = mageCdMult;
+        }
+        // ======================================
+
+        // 밸런스 학습
+        // ======================================
+        // 파이썬(Optuna)에서 전달한 밸런싱 탐색 수치 실시간 수신
+
+        // 체력/대미지 배율 수신
+        //float rawWarriorHp = Academy.Instance.EnvironmentParameters.GetWithDefault("warrior_hp", 250f);
+        //float rawMageHp = Academy.Instance.EnvironmentParameters.GetWithDefault("mage_hp", 230f);
+        //float rawWarriorDmg = Academy.Instance.EnvironmentParameters.GetWithDefault("warrior_dmg_mult", 0.8f);
+        //float rawMageDmg = Academy.Instance.EnvironmentParameters.GetWithDefault("mage_dmg_mult", 1.05f);
+
+        //// 속도 및 쿨타임 배율 수신 (기본값 1.0배)
+        //float warriorSpeedMult = Academy.Instance.EnvironmentParameters.GetWithDefault("warrior_speed", 1.0f);
+        //float mageSpeedMult = Academy.Instance.EnvironmentParameters.GetWithDefault("mage_speed", 1.0f);
+        //float warriorCdMult = Academy.Instance.EnvironmentParameters.GetWithDefault("warrior_cd", 1.0f);
+        //float mageCdMult = Academy.Instance.EnvironmentParameters.GetWithDefault("mage_cd", 1.0f);
+
+        //// 단위 정제 및 체력/대미지 배율 적용
+        //warriorMaxHp = RoundToFive(rawWarriorHp);
+        //mageMaxHp = RoundToFive(rawMageHp);
+        //warriorDamageMultiplier = Mathf.Round(rawWarriorDmg * 20f) / 20f;
+        //mageDamageMultiplier = Mathf.Round(rawMageDmg * 20f) / 20f;
+
+        //if (warriorAgent != null) warriorAgent.maxHp = warriorMaxHp;
+        //if (mageAgent != null) mageAgent.maxHp = mageMaxHp;
+
+        //// 에이전트에 파라미터 적용
+        //if (warriorAgent != null)
+        //{
+        //    warriorAgent.currentMoveSpeed = warriorAgent.moveSpeed * warriorSpeedMult;
+        //    warriorAgent.cooldownMultiplier = warriorCdMult;
+        //}
+        //if (mageAgent != null)
+        //{
+        //    mageAgent.currentMoveSpeed = mageAgent.moveSpeed * mageSpeedMult;
+        //    mageAgent.cooldownMultiplier = mageCdMult;
+        //}
+        // ======================================
     }
 
-   
+
     private void ApplySuddenDeathDamage()
     {
         if (warriorAgent == null || mageAgent == null) return;
@@ -165,8 +226,38 @@ public class ArenaEnvironment : MonoBehaviour
             }
         }
 
-        // 즉시 에피소드를 종료하여 좀비 상태로 60초까지 끌려가는 것을 방지합니다.
+        // 에피소드 종료
+        SendTelemetryToPython();
         warriorAgent.EndEpisode();
         mageAgent.EndEpisode();
+    }
+
+    public void SendTelemetryToPython()
+    {
+        // 텔레메트리 매니저가 없으면 에러 방지
+        if (TelemetryManager.Instance == null) return;
+
+        // 실제 텔레메트리 데이터 추출
+        float w_hit = TelemetryManager.Instance.GetHitRate(0);
+        float m_hit = TelemetryManager.Instance.GetHitRate(1);
+        float avg_dist = TelemetryManager.Instance.GetAverageDistance();
+        float w_dps = TelemetryManager.Instance.GetDPS(0, gameTimer);
+        float m_dps = TelemetryManager.Instance.GetDPS(1, gameTimer);
+
+        CombatTelemetryData data = new CombatTelemetryData
+        {
+            warriorHitRate = float.IsNaN(w_hit) ? 0f : w_hit,
+            mageHitRate = float.IsNaN(m_hit) ? 0f : m_hit,
+            averageDistance = float.IsNaN(avg_dist) ? 3.2f : avg_dist, // 거리가 안 잡히면 기본 목표값 유지
+            survivalTime = gameTimer, // 현재 판의 실제 진행 시간
+            warriorDPS = float.IsNaN(w_dps) ? 0f : w_dps,
+            mageDPS = float.IsNaN(m_dps) ? 0f : m_dps
+        };
+
+        string jsonData = JsonUtility.ToJson(data);
+        if (telemetryChannel != null)
+        {
+            telemetryChannel.SendTelemetryData(jsonData);
+        }
     }
 }

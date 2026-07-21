@@ -13,7 +13,7 @@ public class ArenaAgent : Agent
     public int classId = 0; // 식별 데이터 추가
 
     [Header("Movement & Physics")]
-    public float moveSpeed = 5f;
+    public float moveSpeed = 3f;
     public Rigidbody2D rb { get; private set; }
     private Vector2 lastFacingDirection = Vector2.right;
 
@@ -33,6 +33,10 @@ public class ArenaAgent : Agent
     [Header("Skill Deck System")]
     public int[] initialSkillIds = new int[4] { 1, 2, 3, 6 };
     private SkillManager skillManager;
+
+    [Header("Domain Randomization")]
+    [HideInInspector] public float currentMoveSpeed = 3f; // 매 판 변동될 실제 속도
+    [HideInInspector] public float cooldownMultiplier = 1f; // 쿨타임 증감 배율
 
     [HideInInspector] public bool isDangerActive;
     [HideInInspector] public Vector2 activeDangerCenter;
@@ -231,7 +235,7 @@ public class ArenaAgent : Agent
             for (int i = 0; i < 10; i++) sensor.AddObservation(0f);
         }
 
-        // --- 3. 환경 위협 레이더 (7차원 패딩) ---
+        // --- 3. 환경 위협 레이더 (4차원) ---
         Vector2 hazardVelocity;
         Vector2 closestHazard = GetClosestHazardRelativePosition(out hazardVelocity);
 
@@ -244,10 +248,24 @@ public class ArenaAgent : Agent
         sensor.AddObservation(normalizedVelocity.x);
         sensor.AddObservation(normalizedVelocity.y);
 
-        // 나머지 임시 차원 : 3  (0으로 패딩)
-        for (int i = 0; i < 3; i++) sensor.AddObservation(0f);
+        // --- 4. 도메인 무작위화 변수 인지 (4차원)
+        // 내 상태 (2차원)
+        sensor.AddObservation(currentMoveSpeed / moveSpeed); // 기준 대비 내 속도 비율
+        sensor.AddObservation(cooldownMultiplier);           // 내 쿨타임 배율
 
-        // 최종 크기: 13 + 10 + 7 = 30차원
+        // 적 상태 (2차원)
+        if (enemyAgent != null)
+        {
+            sensor.AddObservation(enemyAgent.currentMoveSpeed / enemyAgent.moveSpeed);
+            sensor.AddObservation(enemyAgent.cooldownMultiplier);
+        }
+        else
+        {
+            sensor.AddObservation(1f);
+            sensor.AddObservation(1f);
+        }
+
+        // 최종 크기: 13 + 10 + 4 + 4 = 31차원
     }
 
     public override void OnActionReceived(ActionBuffers actionBuffers)
@@ -278,7 +296,7 @@ public class ArenaAgent : Agent
 
             if (moveVector != Vector2.zero) lastFacingDirection = moveVector;
 
-            float currentSpeed = isCcImmune ? moveSpeed * 0.6f : moveSpeed;
+            float currentSpeed = isCcImmune ? currentMoveSpeed * 0.6f : currentMoveSpeed;
             rb.velocity = moveVector * currentSpeed;
         }
 
@@ -335,7 +353,7 @@ public class ArenaAgent : Agent
     private void UpdateTimers()
     {
         float dt = Time.fixedDeltaTime;
-        skillManager.UpdateCooldowns(dt);
+        skillManager.UpdateCooldowns(dt / cooldownMultiplier);
 
         if (isStunned)
         {
@@ -506,6 +524,11 @@ public class ArenaAgent : Agent
                 {
                     TelemetryManager.Instance.RecordResult(this.classId, false);
                     TelemetryManager.Instance.RecordResult(attacker.classId, true);
+                }
+
+                if (ArenaEnvironment.Instance != null)
+                {
+                    ArenaEnvironment.Instance.SendTelemetryToPython();
                 }
 
                 EndEpisode();

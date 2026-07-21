@@ -2285,8 +2285,11 @@ MonoBehaviour:
   spawnPoint: {fileID: 1574310562}
   maxHp: 250
   initialSkillIds: 01000000020000000300000006000000
+  currentMoveSpeed: 3
+  cooldownMultiplier: 1
   isDangerActive: 0
   activeDangerCenter: {x: 0, y: 0}
+  hasClaimedEarlyReward: 0
   agentUI: {fileID: 667119269}
 --- !u!114 &667119264
 MonoBehaviour:
@@ -2301,7 +2304,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 30
+    VectorObservationSize: 31
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -3396,8 +3399,11 @@ MonoBehaviour:
   spawnPoint: {fileID: 781415234}
   maxHp: 250
   initialSkillIds: 0700000008000000090000000c000000
+  currentMoveSpeed: 3
+  cooldownMultiplier: 1
   isDangerActive: 0
   activeDangerCenter: {x: 0, y: 0}
+  hasClaimedEarlyReward: 0
   agentUI: {fileID: 1161845730}
 --- !u!114 &1161845724
 MonoBehaviour:
@@ -3412,7 +3418,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 30
+    VectorObservationSize: 31
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
