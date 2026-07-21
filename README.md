@@ -255,7 +255,8 @@ Development is organized as a series of research experiments.
 | 04 | [Behavior Refinement](Docs/experiments/04_behavior_refinement.md) | Complete |
 | 05 | [Balance Optimization](Docs/experiments/05_balance_optimization.md) | Complete |
 | 06 | [Multi Objecitve Optimization](Docs/experiments/06_multi_objective_optimization.md) | Complete |
-| 07 | [Telemetry Driven Optimization](Docs/experiments/07_telemetry_driven_optimization.md) | In Progress |
+| 07 | [Telemetry Driven Optimization](Docs/experiments/07_telemetry_driven_optimization.md) | Complete |
+| 08 | [Expanded Search Space](Docs/experiments/08_expanded_search_space.md) | Complete |
 
 ---
 
