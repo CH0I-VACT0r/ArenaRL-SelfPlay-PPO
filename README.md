@@ -1,8 +1,9 @@
 # ArenaRL-SelfPlay
 
-**ArenaRL-SelfPlay: A Telemetry-Driven Game Balance Optimization Framework using Self-Play Reinforcement Learning**
+**A Telemetry-Driven Game Balance Optimization Framework using Self-Play Reinforcement Learning**
 
 Warrior and Mage agents learn competitive PvP combat through a custom PPO implementation, self-play training, and telemetry-driven analysis.
+Through multi-objective optimization, self-play agents independently converged toward classic Warrior–Mage archetypes while optimizing gameplay balance.
 
 ---
 
