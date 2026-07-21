@@ -1,5 +1,9 @@
 # EP08 — Expanded Search Space Optimization (8-Dimensional Balance Search)
 
+**Date:** 2026-07-22
+
+---
+
 ## Objective
 
 EP07 demonstrated that telemetry-driven multi-objective optimization could successfully balance multiple gameplay metrics simultaneously.
@@ -202,6 +206,18 @@ This outcome illustrates a common challenge in multi-objective optimization: imp
 Rather than indicating an implementation error, this behavior reflects the trade-offs encoded in the objective function itself.
 
 From a game-design perspective, the experiment suggests that the weighting of telemetry metrics has a direct influence on the combat strategies that emerge during optimization.
+
+---
+
+## Reward Hacking Perspective
+
+The observed behavior can be interpreted as a form of reward hacking.
+
+Because the optimization objective placed substantially greater emphasis on win-rate equality and survival time than on combat distance, the optimizer consistently converged toward solutions that minimized the weighted objective while allowing larger combat distances than originally intended.
+
+Although this behavior satisfied the mathematical optimization objective, it did not fully align with the desired gameplay characteristics specified by the designer.
+
+This observation highlights that reward hacking is not necessarily caused by flaws in the learning algorithm itself, but can also emerge when the objective function does not completely capture the designer's intentions.
 
 ---
 
